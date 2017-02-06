@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>sc.fiji</groupId>
+		<artifactId>pom-fiji</artifactId>
+		<version>15.1.0</version>
+		<relativePath />
+	</parent>
+
+	<groupId>eu.koncina.ij</groupId>
+	<artifactId>Rotate_Ellipse</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+
+	<name>Rotate Ellipse</name>
+	<description>A plugin to rotate an ellipse ROI and maintain it as an ellipse ROI</description>
+	<url>http://ij.koncina.eu/</url>
+	<inceptionYear>2017</inceptionYear>
+
+	<developers>
+		<developer>
+			<id>ekoncina</id>
+			<name>Eric Koncina</name>
+			<email>mail@koncina.eu</email>
+			<url>http://ij.koncina.eu/</url>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
+	<properties>
+		<main-class>eu.koncina.ij.Rotate_Ellipse.Rotate_Ellipse</main-class>
+	</properties>
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+		</dependency>
+	</dependencies>
+</project>
