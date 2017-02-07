@@ -16,7 +16,7 @@ public class Rotate_Ellipse implements PlugInFilter {
 	@Override
 	public int setup(String arg, ImagePlus imp) {
 		this.imp = imp;
-		return DOES_8G | DOES_16 | DOES_32 | DOES_RGB;
+		return DOES_ALL + NO_CHANGES;
 	}
 
 	@Override
@@ -32,18 +32,15 @@ public class Rotate_Ellipse implements PlugInFilter {
 		}
 		GenericDialog gd = new GenericDialog("Rotate Ellipse");
 		gd.addNumericField("Angle", 5, 0);
-		//gd.addRadioButtonGroup("Orientation", new String[]{"left", "right"}, 1, 2, "right");
 		gd.showDialog();
 		if (gd.wasCanceled()) return;
 
 		int angle = (int) gd.getNextNumber();
-		//String orientation = gd.getNextRadioButton();
 
 		EllipseRoi ellipse = (EllipseRoi) roi;
 		double[] p = ellipse.getParams();
 		Line line = new Line(p[0], p[1], p[2], p[3]);
 		line = (Line) RoiRotator.rotate(line, angle);
-		//IJ.log("length = " + Math.sqrt(Math.pow(p[2] - p[0], 2) + Math.pow(p[3] - p[1], 2)));
 		imp.setRoi(new EllipseRoi(line.x1d, line.y1d, line.x2d, line.y2d, p[4]));
 	}
 }
