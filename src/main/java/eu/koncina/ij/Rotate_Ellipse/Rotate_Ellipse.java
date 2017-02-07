@@ -1,49 +1,143 @@
 package eu.koncina.ij.Rotate_Ellipse;
 
+import java.awt.Event;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.util.Vector;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.EllipseRoi;
-import ij.gui.GenericDialog;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
 import ij.gui.Line;
-import ij.gui.Roi;
 import ij.plugin.RoiRotator;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
 
-public class Rotate_Ellipse implements PlugInFilter {
+public class Rotate_Ellipse implements PlugInFilter, MouseListener, MouseMotionListener {
+
 	protected ImagePlus imp;
+	static Vector<Integer> images = new Vector<Integer>();
+	ImageCanvas canvas;
+	EllipseRoi ellipse;
+	double[] params;
+	
+	double aspectRatio;
+	int width;
+	
+	int oldX, oldY;
+	int centerX;
 
 	@Override
 	public int setup(String arg, ImagePlus imp) {
 		this.imp = imp;
-		return DOES_8G | DOES_16 | DOES_32 | DOES_RGB;
+		IJ.register(Rotate_Ellipse.class);
+		return DOES_ALL+NO_CHANGES;
 	}
 
 	@Override
 	public void run(ImageProcessor ip) {
-		Roi roi = imp.getRoi();
-		if (roi == null) {
-			IJ.error("This plugin requires a ROI");
+		Integer id = new Integer(imp.getID());
+		if (images.contains(id)) {
+			IJ.log("Already listening to this image");
 			return;
 		}
-		if (!(roi instanceof EllipseRoi)) {
-			IJ.error("This plugin works only with an ellipse ROI");
-			return;
+
+		ImageWindow win = imp.getWindow();
+
+		canvas = win.getCanvas();
+		canvas.addMouseListener(this);
+		canvas.addMouseMotionListener(this);
+		images.addElement(id);
+
+		width = 700;
+		aspectRatio = 0.3;
+		int x1 = imp.getWidth() / 2 - width/2;
+		int x2 = imp.getWidth() / 2 + width/2;
+		int y = imp.getHeight() / 2;
+		
+		ellipse = new EllipseRoi(x1, y, x2, y, aspectRatio);
+		params = ellipse.getParams();
+		imp.setRoi(ellipse);
+
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		int x = e.getX();
+		int y = e.getY();
+		int angle = 0;
+		int offscreenX = canvas.offScreenX(x);
+		int offscreenY = canvas.offScreenY(y);
+		
+		double width = params[2] - params[0];
+		double height = params[3] - params[1];
+		
+		
+		
+		if ((e.getModifiers() & Event.CTRL_MASK) != 0) {
+			if ((offscreenY > oldY && offscreenX < centerX) || (offscreenY < oldY && offscreenX > centerX)) {
+				angle = -1;
+			} else {
+				angle = 1;
+			}
+			oldY = offscreenY;
+			Line line = new Line(params[0], params[1], params[2], params[3]);
+			line = (Line) RoiRotator.rotate(line, angle);
+			ellipse = new EllipseRoi(line.x1d, line.y1d, line.x2d, line.y2d, params[4]);
+			params = ellipse.getParams();
+			imp.setRoi(ellipse);
+		} else {
+			centerX = offscreenX;
+			ellipse = new EllipseRoi(offscreenX - width/2, offscreenY - height/2, offscreenX + width/2, offscreenY + height/2, params[4]);
+			params = ellipse.getParams();
+			imp.setRoi(ellipse);
 		}
-		GenericDialog gd = new GenericDialog("Rotate Ellipse");
-		gd.addNumericField("Angle", 5, 0);
-		//gd.addRadioButtonGroup("Orientation", new String[]{"left", "right"}, 1, 2, "right");
-		gd.showDialog();
-		if (gd.wasCanceled()) return;
+	}
 
-		int angle = (int) gd.getNextNumber();
-		//String orientation = gd.getNextRadioButton();
+	@Override
+	public void mouseMoved(MouseEvent e) {
+	}
 
-		EllipseRoi ellipse = (EllipseRoi) roi;
-		double[] p = ellipse.getParams();
-		Line line = new Line(p[0], p[1], p[2], p[3]);
-		line = (Line) RoiRotator.rotate(line, angle);
-		//IJ.log("length = " + Math.sqrt(Math.pow(p[2] - p[0], 2) + Math.pow(p[3] - p[1], 2)));
-		imp.setRoi(new EllipseRoi(line.x1d, line.y1d, line.x2d, line.y2d, p[4]));
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		imp.killRoi();
+		imp.updateAndDraw();
+		if ((e.getModifiers() & Event.SHIFT_MASK) != 0) {
+			if (width == 700) {
+				width = 600;
+				aspectRatio = 0.5;
+			}
+			else {
+				width = 700;
+				aspectRatio = 0.3;
+			}
+		}
+		int x1 = imp.getWidth() / 2 - width / 2;
+		int x2 = imp.getWidth() / 2 + width / 2;
+		int y = imp.getHeight() / 2;
+		
+		ellipse = new EllipseRoi(x1, y, x2, y, aspectRatio);
+		params = ellipse.getParams();
+		
+		imp.setRoi(ellipse);
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
 	}
 }
